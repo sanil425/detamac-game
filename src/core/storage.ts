@@ -1,7 +1,8 @@
 import type { Settings } from './config';
 import { DEFAULT_SETTINGS, SCHEMA_VERSION, STORAGE_KEY } from './config';
-import type { ModelState } from './model';
-import { emptyModel } from './model';
+import type { AnswerRecord, ModelState } from './model';
+import { applyRankedRound, emptyModel } from './model';
+import type { TypingFit } from './typing';
 
 export interface RankedEntry {
   date: string; // ISO timestamp
@@ -49,10 +50,15 @@ export function migrate(raw: unknown): SaveData {
   }
 
   const model = isObject(raw.model) ? raw.model : {};
+  const typing = isObject(model.typing) ? model.typing : {};
   return {
     schemaVersion: version,
     settings: isObject(raw.settings) ? { ...base.settings, ...(raw.settings as Partial<Settings>) } : base.settings,
-    model: { ...base.model, ...(model as Partial<ModelState>) },
+    model: {
+      ...base.model,
+      ...(model as Partial<ModelState>),
+      typing: { ...base.model.typing, ...(typing as Partial<TypingFit>) },
+    },
     rankedHistory: Array.isArray(raw.rankedHistory) ? (raw.rankedHistory as RankedEntry[]) : [],
   };
 }
@@ -78,4 +84,13 @@ export function exportJson(data: SaveData): string {
 // Throws on invalid JSON or unusable data, so the UI can show an error.
 export function importJson(text: string): SaveData {
   return migrate(JSON.parse(text));
+}
+
+// Called when a ranked round is abandoned (quit, page hidden or closed). The buffered
+// answers go into the model as practice, no score is recorded, and everything is saved
+// right away because the page may be about to disappear. Empties the buffer.
+export function flushRankedBuffer(storage: StorageLike, data: SaveData, buffer: AnswerRecord[]): void {
+  applyRankedRound(data.model, buffer, false);
+  buffer.length = 0;
+  save(storage, data);
 }

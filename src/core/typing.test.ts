@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TYPING_MIN_SAMPLES } from './config';
 import { createRng } from './rng';
-import { addTypingSample, adjustMs, emptyTypingFit, fitLine, typingSlope } from './typing';
+import { addTypingSample, adjustMs, emptyTypingFit, fitLine, typingReady, typingSlope } from './typing';
 
 describe('typing fit', () => {
   it('recovers a known a and b from synthetic data', () => {
@@ -30,6 +30,19 @@ describe('typing fit', () => {
     const fit = emptyTypingFit();
     for (let i = 0; i < 100; i++) addTypingSample(fit, 2, 1000 + i);
     expect(typingSlope(fit)).toBe(0);
+  });
+
+  it('is not applied when lopsided: 2 lengths seen but only one has 5+ answers', () => {
+    const fit = emptyTypingFit();
+    for (let i = 0; i < 40; i++) addTypingSample(fit, 2, 1600);
+    for (let i = 0; i < 4; i++) addTypingSample(fit, 3, 1900);
+    expect(fit.n).toBeGreaterThanOrEqual(TYPING_MIN_SAMPLES);
+    expect(fitLine(fit)!.b).toBeCloseTo(300); // the line exists...
+    expect(typingReady(fit)).toBe(false); // ...but isn't trusted yet
+    expect(typingSlope(fit)).toBe(0);
+    addTypingSample(fit, 3, 1900); // 5th 3-digit answer
+    expect(typingReady(fit)).toBe(true);
+    expect(typingSlope(fit)).toBeCloseTo(300);
   });
 
   it('clamps a negative slope to 0', () => {

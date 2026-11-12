@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SETTINGS, SCHEMA_VERSION, STORAGE_KEY } from './config';
+import { DEFAULT_SETTINGS, EWMA_ALPHA, PRACTICE_WEIGHT, SCHEMA_VERSION, STORAGE_KEY } from './config';
+import type { AnswerRecord } from './model';
 import { makeRecord, recordAnswer } from './model';
 import type { StorageLike } from './storage';
-import { defaultSaveData, exportJson, importJson, load, migrate, save } from './storage';
+import { defaultSaveData, exportJson, importJson, flushRankedBuffer, load, migrate, save } from './storage';
 
 function fakeStorage(): StorageLike & { data: Map<string, string> } {
   const data = new Map<string, string>();
@@ -41,6 +42,34 @@ describe('storage', () => {
     expect(m.rankedHistory).toEqual(old.rankedHistory);
     expect(m.settings).toEqual({ ...DEFAULT_SETTINGS, durationSeconds: 60 });
     expect(m.model.typing).toEqual(defaultSaveData().model.typing);
+  });
+
+  it('flushRankedBuffer (pagehide / quit) saves buffered ranked answers as practice, no score', () => {
+    const s = fakeStorage();
+    const data = defaultSaveData();
+    const q = { op: 'addition' as const, left: 27, right: 38, answer: 65 };
+    const buffer: AnswerRecord[] = [
+      makeRecord(q, 5000, 'ranked', 1), // first of round: skipped
+      makeRecord(q, 1000, 'ranked', 2),
+      makeRecord(q, 2000, 'ranked', 3),
+    ];
+    flushRankedBuffer(s, data, buffer);
+
+    expect(buffer).toEqual([]); // emptied, so a second flush can't double count
+    const saved = load(s);
+    expect(saved.rankedHistory).toEqual([]);
+    expect(saved.model.totalAnswers).toBe(2);
+    const g = saved.model.groups['add:carry:2+2:le100'];
+    expect(g.fast).toBeCloseTo(1000 + EWMA_ALPHA * PRACTICE_WEIGHT * 1000);
+
+    flushRankedBuffer(s, data, buffer);
+    expect(load(s).model.totalAnswers).toBe(2);
+  });
+
+  it('migrate() fills typing fields missing from an older save', () => {
+    const m = migrate({ schemaVersion: 1, model: { typing: { n: 3, sumX: 6, sumY: 3000, sumXX: 14, sumXY: 6200 } } });
+    expect(m.model.typing.digitCounts).toEqual({});
+    expect(m.model.typing.n).toBe(3);
   });
 
   it('import rejects bad input', () => {

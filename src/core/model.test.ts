@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { EWMA_ALPHA, OUTLIER_MS, PRACTICE_WEIGHT } from './config';
 import type { Question } from './generator';
-import { emptyModel, makeRecord, recordAnswer, recordRound, trend, weakestGroups, weakness } from './model';
+import {
+  applyRankedRound,
+  emptyModel,
+  makeRecord,
+  recordAnswer,
+  recordRound,
+  trend,
+  weakestGroups,
+  weakness,
+} from './model';
 
 const q78: Question = { op: 'multiplication', left: 7, right: 8, answer: 56 };
 const q87: Question = { op: 'multiplication', left: 8, right: 7, answer: 56 };
@@ -36,6 +45,19 @@ describe('model', () => {
     recordRound(m, [makeRecord(q78, 9000, 'ranked', 1), makeRecord(q78, 1000, 'ranked', 2)]);
     expect(m.totalAnswers).toBe(1);
     expect(m.groups['mul:7:le12'].fast).toBe(1000);
+  });
+
+  it('an abandoned ranked round counts at practice weight', () => {
+    const round = [makeRecord(q99, 900, 'ranked', 0), makeRecord(q78, 1000, 'ranked', 1), makeRecord(q78, 2000, 'ranked', 2)];
+    const done = emptyModel();
+    const quit = emptyModel();
+    applyRankedRound(done, round, true);
+    applyRankedRound(quit, round, false);
+    expect(done.totalAnswers).toBe(2); // first question skipped
+    const doneMove = done.groups['mul:7:le12'].fast - 1000;
+    const quitMove = quit.groups['mul:7:le12'].fast - 1000;
+    expect(quitMove).toBeCloseTo(doneMove * PRACTICE_WEIGHT);
+    expect(round[1].mode).toBe('ranked'); // input records are not modified
   });
 
   it('7×8 and 8×7 update the same fact', () => {

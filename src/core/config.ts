@@ -45,8 +45,10 @@ export const DEFAULT_SETTINGS: Settings = {
 export const PRACTICE_WEIGHT = 0.5;
 // Answers slower than this are treated as distractions and ignored.
 export const OUTLIER_MS = 15000;
-// Typing correction turns on only after this many answers (covering 2+ digit lengths).
+// Typing correction turns on only after this many answers...
 export const TYPING_MIN_SAMPLES = 30;
+// ...and at least two digit lengths must each have this many answers.
+export const TYPING_MIN_PER_LENGTH = 5;
 // Fast EWMA: each new answer moves the average 20% of the way toward it.
 export const EWMA_ALPHA = 0.2;
 // Slow EWMA, used only to judge the trend.

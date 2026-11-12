@@ -98,6 +98,17 @@ export function recordRound(model: ModelState, records: AnswerRecord[]): void {
   records.forEach((rec, i) => recordAnswer(model, rec, i === 0));
 }
 
+// Ranked answers are held until the round ends (ranked questions never read the model,
+// so nothing is lost by waiting). A completed round counts as ranked; a round that was
+// quit, closed or hidden counts as practice, i.e. at PRACTICE_WEIGHT.
+export function applyRankedRound(model: ModelState, records: AnswerRecord[], completed: boolean): void {
+  const mode: Mode = completed ? 'ranked' : 'practice';
+  recordRound(
+    model,
+    records.map((r) => ({ ...r, mode })),
+  );
+}
+
 // Weakness compares a group to its own operation, so slow-but-normal operations
 // (division is usually slower than addition) don't swamp everything else.
 // 1.8 means "80% slower than your usual speed for this operation".
