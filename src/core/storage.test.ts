@@ -66,10 +66,26 @@ describe('storage', () => {
     expect(load(s).model.totalAnswers).toBe(2);
   });
 
-  it('migrate() fills typing fields missing from an older save', () => {
-    const m = migrate({ schemaVersion: 1, model: { typing: { n: 3, sumX: 6, sumY: 3000, sumXX: 14, sumXY: 6200 } } });
-    expect(m.model.typing.digitCounts).toEqual({});
-    expect(m.model.typing.n).toBe(3);
+  it('migrate() v1 → v2 keeps stats and history but restarts the old single-line typing fit', () => {
+    const v1 = {
+      schemaVersion: 1,
+      settings: { ...DEFAULT_SETTINGS, durationSeconds: 300 },
+      rankedHistory: [{ date: '2026-11-01T00:00:00.000Z', score: 40 }],
+      model: {
+        groups: { 'mul:7:le12': { fast: 3000, slow: 3100, count: 9, lastSeen: 5 } },
+        facts: {},
+        operations: { multiplication: { fast: 2000, slow: 2000, count: 9, lastSeen: 5 } },
+        typing: { n: 3, sumX: 6, sumY: 3000, sumXX: 14, sumXY: 6200, digitCounts: { 2: 3 } },
+        totalAnswers: 9,
+      },
+    };
+    const m = migrate(v1);
+    expect(m.schemaVersion).toBe(2);
+    expect(m.model.typing).toEqual(defaultSaveData().model.typing);
+    expect(m.model.groups['mul:7:le12'].count).toBe(9);
+    expect(m.model.totalAnswers).toBe(9);
+    expect(m.rankedHistory).toEqual(v1.rankedHistory);
+    expect(m.settings.durationSeconds).toBe(300);
   });
 
   it('import rejects bad input', () => {

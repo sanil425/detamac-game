@@ -35,21 +35,26 @@ function isObject(x: unknown): x is Record<string, unknown> {
   return typeof x === 'object' && x !== null && !Array.isArray(x);
 }
 
-// Bring saved data from any older schema up to the current one.
-// Version 0 = data written before schemaVersion existed (or with parts missing);
-// it is upgraded by filling missing parts with defaults.
-// Future versions add steps: `if (version < 2) { ...; version = 2; }`
+// Bring saved data from any older schema up to the current one, one step at a time.
+//   v0: data written before schemaVersion existed (or with parts missing); missing
+//       parts are filled with defaults.
+//   v1 → v2: the typing fit went from one set of sums to sums per operation. Old sums
+//       can't be split, so the typing fit starts over (it relearns within ~30 answers).
 export function migrate(raw: unknown): SaveData {
   if (!isObject(raw)) throw new Error('Save data is not an object');
   let version = typeof raw.schemaVersion === 'number' ? raw.schemaVersion : 0;
   if (version > SCHEMA_VERSION) throw new Error(`Save data is from a newer version (${version})`);
 
   const base = defaultSaveData();
+  const model = isObject(raw.model) ? { ...raw.model } : {};
   if (version < 1) {
     version = 1;
   }
+  if (version < 2) {
+    delete model.typing;
+    version = 2;
+  }
 
-  const model = isObject(raw.model) ? raw.model : {};
   const typing = isObject(model.typing) ? model.typing : {};
   return {
     schemaVersion: version,

@@ -26,7 +26,7 @@ Multiplications with both factors in 2–12 also update a per-fact stat (7×8 an
 
 **Weakness is relative to the operation.** A group's weakness is its average time divided by your average for that operation. Division is usually slower than addition, so comparing raw times would make every division group look weak. "1.8× slower" means 80% slower than your typical answer for the same operation.
 
-**Typing correction.** A 3-digit answer takes longer to type than a 1-digit one, and that isn't an arithmetic weakness. Detamac fits a line `time ≈ a + b × digits` over all answers (by least squares, storing only running sums) and subtracts `b × digits` from each time. The correction turns on once there are 30 answers and at least two answer lengths with 5+ answers each.
+**Typing correction.** A 3-digit answer takes longer to type than a 1-digit one, and that isn't an arithmetic weakness. Detamac fits `time ≈ a(operation) + b × digits` by least squares, storing only running sums, and subtracts `b × digits` from each time. Each operation gets its own baseline `a`, because operations differ in both speed and answer length. Division is slow with short answers, for example, and a single shared baseline would wrongly blame that on typing. The correction turns on once there are 30 answers and at least two answer lengths with 5+ answers each.
 
 **Filtering.** The first question of each round (you're still settling in) and answers over 15 seconds (you got distracted) are ignored.
 

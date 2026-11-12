@@ -78,4 +78,4 @@ export const ENUMERATION_SAMPLES = 20000;
 
 // --- Storage ---
 export const STORAGE_KEY = 'detamac:v1';
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;

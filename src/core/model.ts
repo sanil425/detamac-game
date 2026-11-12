@@ -83,7 +83,7 @@ export function recordAnswer(model: ModelState, rec: AnswerRecord, isFirstInRoun
 
   // Correct using the fit from earlier answers, then add this answer to the fit.
   const adjusted = adjustMs(model.typing, rec.ms, rec.answerDigits);
-  addTypingSample(model.typing, rec.answerDigits, rec.ms);
+  addTypingSample(model.typing, rec.operation, rec.answerDigits, rec.ms);
 
   const weight = modeWeight(rec.mode);
   updateStat(model.groups, rec.groupId, adjusted, weight, rec.timestamp);
