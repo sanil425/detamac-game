@@ -8,5 +8,7 @@ export default defineConfig({
   test: {
     // Unit tests only; the Playwright e2e tests in e2e/ run with `npm run test:e2e`.
     include: ['src/**/*.test.ts'],
+    // Show console output from passing tests too (the simulation test prints its results).
+    silent: false,
   },
 });
