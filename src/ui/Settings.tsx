@@ -92,8 +92,8 @@ export function Settings({ initial, onChange, onStartPractice, onStartRanked, on
             <input type="checkbox" checked={form.addition} onChange={() => toggle('addition')} /> Addition
           </label>
           <div className="op-detail">
-            Range: ({rangeInput('addLeft', 'min')} to {rangeInput('addLeft', 'max')}) + ({rangeInput('addRight', 'min')}{' '}
-            to {rangeInput('addRight', 'max')})
+            Range: <span className="nowrap">({rangeInput('addLeft', 'min')} to {rangeInput('addLeft', 'max')})</span> +{' '}
+            <span className="nowrap">({rangeInput('addRight', 'min')} to {rangeInput('addRight', 'max')})</span>
           </div>
         </div>
 
@@ -110,8 +110,8 @@ export function Settings({ initial, onChange, onStartPractice, onStartRanked, on
             Multiplication
           </label>
           <div className="op-detail">
-            Range: ({rangeInput('mulLeft', 'min')} to {rangeInput('mulLeft', 'max')}) × ({rangeInput('mulRight', 'min')}{' '}
-            to {rangeInput('mulRight', 'max')})
+            Range: <span className="nowrap">({rangeInput('mulLeft', 'min')} to {rangeInput('mulLeft', 'max')})</span> ×{' '}
+            <span className="nowrap">({rangeInput('mulRight', 'min')} to {rangeInput('mulRight', 'max')})</span>
           </div>
         </div>
 

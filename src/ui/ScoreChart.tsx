@@ -3,6 +3,7 @@ import { CategoryScale, Chart, LinearScale, LineController, LineElement, PointEl
 import type { RankedEntry } from '../core/storage';
 
 Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip);
+Chart.defaults.font.size = 15;
 
 const LINE = '#4a5568';
 const BEST = '#c2410c';
@@ -20,7 +21,7 @@ export function ScoreChart({ history }: { history: RankedEntry[] }) {
     const chart = new Chart(canvas.current, {
       type: 'line',
       data: {
-        labels: history.map((h) => new Date(h.date).toLocaleDateString()),
+        labels: history.map((h) => new Date(h.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
         datasets: [
           {
             data: scores,
@@ -47,7 +48,7 @@ export function ScoreChart({ history }: { history: RankedEntry[] }) {
           },
         },
         scales: {
-          x: { grid: { display: false }, ticks: { maxTicksLimit: 8, color: '#666' } },
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 6, maxRotation: 0, color: '#666' } },
           y: { beginAtZero: true, grid: { color: '#eee' }, ticks: { precision: 0, color: '#666' } },
         },
       },

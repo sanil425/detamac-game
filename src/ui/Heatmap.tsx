@@ -2,8 +2,8 @@ import { FACT_MAX, FACT_MIN, MIN_ATTEMPTS } from '../core/config';
 import type { ModelState } from '../core/model';
 import { factRatio } from '../core/model';
 
-const CELL = 34;
-const PAD = 26; // room for axis labels
+const CELL = 40;
+const PAD = 30; // room for axis labels
 const FASTER: [number, number, number] = [43, 108, 176]; // blue
 const SLOWER: [number, number, number] = [194, 65, 12]; // orange
 const MIDDLE: [number, number, number] = [244, 244, 244]; // neutral, same speed as average
@@ -30,11 +30,11 @@ export function Heatmap({ model }: { model: ModelState }) {
     <div>
       <svg className="heatmap" viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Multiplication fact speeds">
         {values.map((v, i) => (
-          <g key={`label-${v}`} fontSize="12" fill="#555" textAnchor="middle">
-            <text x={PAD + i * CELL + CELL / 2} y={PAD - 9}>
+          <g key={`label-${v}`} fontSize="16" fill="#555" textAnchor="middle">
+            <text x={PAD + i * CELL + CELL / 2} y={PAD - 10}>
               {v}
             </text>
-            <text x={PAD / 2} y={PAD + i * CELL + CELL / 2 + 4}>
+            <text x={PAD / 2} y={PAD + i * CELL + CELL / 2 + 5}>
               {v}
             </text>
           </g>
@@ -64,8 +64,8 @@ export function Heatmap({ model }: { model: ModelState }) {
                 </rect>
                 <text
                   x={x + CELL / 2}
-                  y={y + CELL / 2 + 4}
-                  fontSize="11"
+                  y={y + CELL / 2 + 6}
+                  fontSize="17"
                   textAnchor="middle"
                   fill={strength > 0.6 ? '#fff' : '#222'}
                   pointerEvents="none"
