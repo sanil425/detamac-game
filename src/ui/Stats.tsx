@@ -110,6 +110,23 @@ export function Stats({ data, onImport, onBack }: Props) {
         />
       </p>
       {message && <p>{message}</p>}
+
+      {/* Dev server only: Vite replaces import.meta.env.DEV with false in production builds,
+          so this button and the simulator it loads are left out of the deployed site. */}
+      {import.meta.env.DEV && (
+        <p>
+          <button
+            type="button"
+            onClick={async () => {
+              const { buildDemoData } = await import('../core/simulate');
+              onImport(buildDemoData(Date.now()));
+              setMessage('Demo data loaded.');
+            }}
+          >
+            Load demo data
+          </button>
+        </p>
+      )}
     </div>
   );
 }
