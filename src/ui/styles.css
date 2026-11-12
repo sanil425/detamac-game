@@ -109,10 +109,15 @@ input.answer {
   border: 1px solid var(--border);
 }
 
-.quit {
+.game-links {
   text-align: center;
   margin-top: 3em;
   font-size: 0.875em;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.8em;
 }
 
 /* End screen */

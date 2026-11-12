@@ -12,10 +12,11 @@ interface Props {
   settings: Settings;
   model: ModelState;
   onAnswer: (record: AnswerRecord, isFirstInRound: boolean) => void;
-  onEnd: (score: number, completed: boolean) => void;
+  onEnd: (score: number) => void; // the timer ran out
+  onInterrupt: (next: 'restart' | 'settings') => void; // the player left mid-round
 }
 
-export function Game({ mode, settings, model, onAnswer, onEnd }: Props) {
+export function Game({ mode, settings, model, onAnswer, onEnd, onInterrupt }: Props) {
   const rng = useRef(createRng(Math.floor(Math.random() * 2 ** 32))).current;
   const endAt = useRef(Date.now() + settings.durationSeconds * 1000);
   const [question, setQuestion] = useState<Question>(() =>
@@ -30,21 +31,32 @@ export function Game({ mode, settings, model, onAnswer, onEnd }: Props) {
   const scoreRef = useRef(0);
   const onEndRef = useRef(onEnd);
   onEndRef.current = onEnd;
+  const onInterruptRef = useRef(onInterrupt);
+  onInterruptRef.current = onInterrupt;
 
-  function finish(completed: boolean) {
+  function finish() {
     if (ended.current) return;
     ended.current = true;
-    onEndRef.current(scoreRef.current, completed);
+    onEndRef.current(scoreRef.current);
+  }
+
+  function interrupt(next: 'restart' | 'settings') {
+    if (ended.current) return;
+    ended.current = true;
+    onInterruptRef.current(next);
   }
 
   useEffect(() => {
     const id = window.setInterval(() => {
       const left = Math.max(0, Math.ceil((endAt.current - Date.now()) / 1000));
       setSecondsLeft(left);
-      if (left === 0) finish(true);
+      if (left === 0) finish();
     }, 100);
+    // Esc: restart right away. Shift+Esc: back to settings.
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') finish(false);
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      interrupt(e.shiftKey ? 'settings' : 'restart');
     };
     window.addEventListener('keydown', onKey);
     return () => {
@@ -88,11 +100,12 @@ export function Game({ mode, settings, model, onAnswer, onEnd }: Props) {
           onChange={(e) => handleChange(e.target.value)}
         />
       </div>
-      <p className="quit">
-        <button type="button" className="link muted" onClick={() => finish(false)}>
-          Quit (Esc)
+      <div className="game-links">
+        <button type="button" className="link" onClick={() => interrupt('settings')}>
+          Settings
         </button>
-      </p>
+        <p className="hint">Esc: restart · Shift+Esc: settings</p>
+      </div>
     </div>
   );
 }

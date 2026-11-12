@@ -47,10 +47,12 @@ export function App() {
   const [lastScore, setLastScore] = useState(0);
   // Ranked answers wait here until the round ends.
   const rankedBuffer = useRef<AnswerRecord[]>([]);
+  const roundCounter = useRef(0);
 
   const start = useCallback((mode: Mode, settings: SettingsType) => {
     rankedBuffer.current = [];
-    setRound({ id: Date.now(), mode, settings });
+    roundCounter.current += 1;
+    setRound({ id: roundCounter.current, mode, settings });
     setScreen('game');
   }, []);
 
@@ -84,23 +86,24 @@ export function App() {
     }
   }
 
-  function handleEnd(score: number, completed: boolean) {
+  // The timer ran out: a finished ranked round is saved with its score.
+  function handleEnd(score: number) {
     if (round?.mode === 'ranked') {
-      if (completed) {
-        applyRankedRound(data.current.model, rankedBuffer.current, true);
-        rankedBuffer.current = [];
-        data.current.rankedHistory.push({ date: new Date().toISOString(), score });
-        save(browserStorage, data.current);
-      } else {
-        flushRankedBuffer(browserStorage, data.current, rankedBuffer.current);
-      }
+      applyRankedRound(data.current.model, rankedBuffer.current, true);
+      rankedBuffer.current = [];
+      data.current.rankedHistory.push({ date: new Date().toISOString(), score });
+      save(browserStorage, data.current);
     }
-    if (completed) {
-      setLastScore(score);
-      setScreen('results');
-    } else {
-      setScreen('settings');
-    }
+    setLastScore(score);
+    setScreen('results');
+  }
+
+  // The player left mid-round (Esc / Shift+Esc / Settings link). No score is recorded;
+  // ranked answers are kept as practice. Practice answers were already saved as they came.
+  function handleInterrupt(next: 'restart' | 'settings') {
+    if (round?.mode === 'ranked') flushRankedBuffer(browserStorage, data.current, rankedBuffer.current);
+    if (next === 'restart' && round) start(round.mode, round.settings);
+    else setScreen('settings');
   }
 
   const retry = useCallback(() => {
@@ -116,6 +119,7 @@ export function App() {
         model={data.current.model}
         onAnswer={handleAnswer}
         onEnd={handleEnd}
+        onInterrupt={handleInterrupt}
       />
     );
   }

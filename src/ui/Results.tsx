@@ -7,17 +7,20 @@ interface Props {
 }
 
 export function Results({ score, onRetry, onSettings }: Props) {
-  // Enter or Esc starts another round with the same settings.
+  // Enter or Esc: play again with the same mode and settings. Shift+Esc: settings.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === 'Escape') {
+      if (e.key === 'Escape' && e.shiftKey) {
+        e.preventDefault();
+        onSettings();
+      } else if (e.key === 'Enter' || e.key === 'Escape') {
         e.preventDefault();
         onRetry();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onRetry]);
+  }, [onRetry, onSettings]);
 
   return (
     <div className="page end">
