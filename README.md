@@ -45,11 +45,14 @@ Requires Node 20.19+ (CI uses Node 24).
 ```sh
 npm install
 npm run dev      # start the dev server
-npm test         # unit tests (Vitest)
+npm test         # unit tests (Vitest), including a simulated-player test of the adaptive model
+npm run test:e2e # browser tests (Playwright); first run: npx playwright install chromium
 npm run build    # type-check and build to dist/
 ```
 
-Pushing to `main` deploys to GitHub Pages via `.github/workflows/deploy.yml`. Under the repo's Settings → Pages, set the source to "GitHub Actions" once.
+In dev mode (`npm run dev`), the stats page has a "Load demo data" button that fills it with a simulated player's history.
+
+Pushing to `main` runs all tests and, if they pass, deploys to GitHub Pages via `.github/workflows/deploy.yml`. Under the repo's Settings → Pages, set the source to "GitHub Actions" once.
 
 ## Layout
 

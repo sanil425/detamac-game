@@ -24,7 +24,10 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Any failing unit or e2e test stops the deploy.
       - run: npm test
+      - run: npm run test:e2e
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
