@@ -58,7 +58,7 @@ export function ScoreChart({ history }: { history: RankedEntry[] }) {
   return (
     <div>
       <p>
-        Personal best: <strong>{best}</strong> <span className="muted">({history.length} ranked games)</span>
+        Personal best: <strong>{best}</strong> <span className="muted">({history.length} ranked {history.length === 1 ? 'game' : 'games'})</span>
       </p>
       <div className="chart">
         <canvas ref={canvas} role="img" aria-label={`Ranked scores over time. Personal best ${best}.`} />
