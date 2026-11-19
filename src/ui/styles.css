@@ -162,6 +162,23 @@ input.answer {
   display: block;
 }
 
+.legend {
+  margin: 8px 0 0;
+}
+
+.swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin: 0 4px 0 12px;
+  border: 1px solid #bbb;
+  vertical-align: -2px;
+}
+
+.swatch:first-child {
+  margin-left: 0;
+}
+
 .weakest {
   padding-left: 1.6em;
 }
