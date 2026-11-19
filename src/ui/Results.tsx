@@ -7,13 +7,13 @@ interface Props {
 }
 
 export function Results({ score, onRetry, onSettings }: Props) {
-  // Enter or Esc: play again with the same mode and settings. Shift+Esc: settings.
+  // Enter: play again with the same mode and settings. Esc: menu.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && e.shiftKey) {
+      if (e.key === 'Escape') {
         e.preventDefault();
         onSettings();
-      } else if (e.key === 'Enter' || e.key === 'Escape') {
+      } else if (e.key === 'Enter') {
         e.preventDefault();
         onRetry();
       }
@@ -23,16 +23,16 @@ export function Results({ score, onRetry, onSettings }: Props) {
   }, [onRetry, onSettings]);
 
   return (
-    <div className="page end">
+    <div className="panel end">
       <p className="final-score">Score: {score}</p>
-      <p>
+      <div className="buttons">
         <button type="button" onClick={onRetry}>
           Try again
         </button>{' '}
         <button type="button" onClick={onSettings}>
           Change settings
         </button>
-      </p>
+      </div>
     </div>
   );
 }

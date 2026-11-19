@@ -138,7 +138,7 @@ test('a completed ranked round is saved once', async ({ page }) => {
   expect(await rankedGameCount(page)).toBe(1);
 });
 
-test('Esc mid-round restarts instantly; a restarted ranked round keeps answers as practice, no score', async ({
+test('refresh mid-round restarts the same mode; a refreshed ranked round keeps answers as practice, no score', async ({
   page,
 }) => {
   await open(page);
@@ -149,43 +149,72 @@ test('Esc mid-round restarts instantly; a restarted ranked round keeps answers a
   await page.clock.runFor(10_000);
   await expect(banner(page).nth(0)).toHaveText('Seconds left: 107');
 
-  await page.keyboard.press('Escape');
+  await page.reload();
 
-  // A fresh round: full timer, score 0, input focused and empty.
+  // A fresh round: full timer, score 0, input focused and empty, and the clock runs from 120.
   await expect(banner(page).nth(0)).toHaveText('Seconds left: 120');
   await expect(banner(page).nth(1)).toHaveText('Score: 0');
   await expect(answerBox(page)).toBeFocused();
   await expect(answerBox(page)).toHaveValue('');
+  await page.clock.runFor(5000);
+  await expect(banner(page).nth(0)).toHaveText('Seconds left: 115');
   // No score recorded; the 2 answers were kept as practice (the round's first is always skipped).
   const saved = await savedData(page);
   expect(saved.rankedHistory.length).toBe(0);
   expect(saved.model.totalAnswers).toBe(1);
 
-  // The new round is still ranked and works: finishing it records one score.
-  const score = await playRound(page);
+  // The new round is still ranked: finishing it records one score.
+  await page.clock.runFor(ROUND_MS);
+  await expect(page.locator('.final-score')).toHaveText('Score: 0');
   expect(await rankedGameCount(page)).toBe(1);
-  await page.getByRole('button', { name: 'Change settings' }).click();
-  await page.getByRole('button', { name: 'Stats' }).click();
-  await expect(page.getByText(`Personal best: ${score}`)).toBeVisible();
 });
 
-test('Shift+Esc and the Settings link leave a round for the settings screen', async ({ page }) => {
+test('Esc mid-round goes to the menu with no score, and a refresh there stays on the menu', async ({ page }) => {
   await open(page);
-  await expect(page.getByText('Esc: restart · Shift+Esc: settings')).toBeHidden();
-  await page.getByRole('button', { name: 'Start practice' }).click();
-  await expect(page.getByText('Esc: restart · Shift+Esc: settings')).toBeVisible();
-  await answerCorrectly(page, 0);
-  await page.keyboard.press('Shift+Escape');
-  await expect(page.getByRole('button', { name: 'Start practice' })).toBeVisible();
-
   await page.getByRole('button', { name: 'Play ranked' }).click();
   await answerCorrectly(page, 0);
-  await page.getByRole('button', { name: 'Settings' }).click();
-  await expect(page.getByRole('button', { name: 'Start practice' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('button', { name: 'Start practice (E)' })).toBeVisible();
   expect(await rankedGameCount(page)).toBe(0);
+
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Start practice (E)' })).toBeVisible();
+  await expect(answerBox(page)).toBeHidden();
 });
 
-test('results screen: Enter and Esc play again, Shift+Esc goes to settings', async ({ page }) => {
+test('menu keys: E starts practice, R starts ranked, S opens stats; Esc returns', async ({ page }) => {
+  await open(page);
+  await expect(page.getByRole('button', { name: 'Play ranked (R)' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Stats (S)' })).toBeVisible();
+
+  await page.keyboard.press('e');
+  await expect(banner(page).nth(0)).toHaveText('Seconds left: 120');
+  await expect(answerBox(page)).toHaveValue(''); // the "e" didn't land in the answer box
+  await page.keyboard.press('Escape');
+
+  await page.keyboard.press('r');
+  await expect(banner(page).nth(0)).toHaveText('Seconds left: 120');
+  await page.clock.runFor(ROUND_MS + 500);
+  expect(await rankedGameCount(page)).toBe(1); // it was a ranked round
+  await page.keyboard.press('Escape');
+
+  await page.keyboard.press('s');
+  await expect(page.getByRole('heading', { name: 'Stats' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('button', { name: 'Start practice (E)' })).toBeVisible();
+});
+
+test('menu keys are ignored while typing in a range box', async ({ page }) => {
+  await open(page);
+  const box = page.getByLabel('addLeft max');
+  await box.fill('');
+  await box.pressSequentially('ers');
+  await expect(box).toHaveValue('ers');
+  await expect(page.getByRole('heading', { name: 'Detamac' })).toBeVisible();
+  await expect(answerBox(page)).toBeHidden();
+});
+
+test('results screen: Enter plays again, Esc goes to the menu', async ({ page }) => {
   await open(page);
   await page.getByRole('button', { name: 'Start practice' }).click();
   await page.clock.runFor(ROUND_MS + 500);
@@ -197,11 +226,6 @@ test('results screen: Enter and Esc play again, Shift+Esc goes to settings', asy
   await expect(page.locator('.final-score')).toBeVisible();
 
   await page.keyboard.press('Escape');
-  await expect(banner(page).nth(0)).toHaveText('Seconds left: 120');
-  await page.clock.runFor(ROUND_MS + 500);
-  await expect(page.locator('.final-score')).toBeVisible();
-
-  await page.keyboard.press('Shift+Escape');
   await expect(page.getByRole('button', { name: 'Start practice' })).toBeVisible();
 });
 

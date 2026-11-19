@@ -13,7 +13,7 @@ interface Props {
   model: ModelState;
   onAnswer: (record: AnswerRecord, isFirstInRound: boolean) => void;
   onEnd: (score: number) => void; // the timer ran out
-  onInterrupt: (next: 'restart' | 'settings') => void; // the player left mid-round
+  onInterrupt: () => void; // the player pressed Esc mid-round
 }
 
 export function Game({ mode, settings, model, onAnswer, onEnd, onInterrupt }: Props) {
@@ -40,10 +40,10 @@ export function Game({ mode, settings, model, onAnswer, onEnd, onInterrupt }: Pr
     onEndRef.current(scoreRef.current);
   }
 
-  function interrupt(next: 'restart' | 'settings') {
+  function interrupt() {
     if (ended.current) return;
     ended.current = true;
-    onInterruptRef.current(next);
+    onInterruptRef.current();
   }
 
   useEffect(() => {
@@ -52,11 +52,11 @@ export function Game({ mode, settings, model, onAnswer, onEnd, onInterrupt }: Pr
       setSecondsLeft(left);
       if (left === 0) finish();
     }, 100);
-    // Esc: restart right away. Shift+Esc: back to settings.
+    // Esc: back to the menu.
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       e.preventDefault();
-      interrupt(e.shiftKey ? 'settings' : 'restart');
+      interrupt();
     };
     window.addEventListener('keydown', onKey);
     return () => {
@@ -99,12 +99,6 @@ export function Game({ mode, settings, model, onAnswer, onEnd, onInterrupt }: Pr
           value={value}
           onChange={(e) => handleChange(e.target.value)}
         />
-      </div>
-      <div className="game-links">
-        <button type="button" className="link" onClick={() => interrupt('settings')}>
-          Settings
-        </button>
-        <p className="hint">Esc: restart · Shift+Esc: settings</p>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Range, Settings as SettingsType } from '../core/config';
 import { DURATIONS, RANKED_DURATION } from '../core/config';
 
@@ -55,6 +55,28 @@ export function Settings({ initial, onChange, onStartPractice, onStartRanked, on
   const result = validate(form, ranges);
   const error = typeof result === 'string' ? result : null;
 
+  // E: start practice, R: play ranked, S: stats. Ignored while typing in a text box.
+  const keyActions = useRef<Record<string, () => void>>({});
+  keyActions.current = {
+    e: () => {
+      if (typeof result !== 'string') onStartPractice(result);
+    },
+    r: onStartRanked,
+    s: onStats,
+  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = document.activeElement;
+      const typing = (el instanceof HTMLInputElement && el.type === 'text') || el instanceof HTMLTextAreaElement;
+      const action = keyActions.current[e.key.toLowerCase()];
+      if (typing || e.ctrlKey || e.metaKey || e.altKey || !action) return;
+      e.preventDefault(); // keep the letter out of the answer box that's about to appear
+      action();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   function update(f: SettingsType, r: Record<RangeKey, RangeText>) {
     setForm(f);
     setRanges(r);
@@ -77,7 +99,7 @@ export function Settings({ initial, onChange, onStartPractice, onStartRanked, on
   );
 
   return (
-    <div className="page">
+    <div className="panel">
       <h1>Detamac</h1>
       <p>A quick arithmetic drill: answer as many problems as you can before the clock runs out.</p>
 
@@ -137,23 +159,19 @@ export function Settings({ initial, onChange, onStartPractice, onStartRanked, on
         </div>
 
         {error && <p className="error">{error}</p>}
-        <button type="submit" disabled={error !== null}>
-          Start practice
-        </button>
+        <p className="muted small">Ranked: default settings, {RANKED_DURATION} seconds. Scores are saved.</p>
+        <div className="buttons">
+          <button type="submit" disabled={error !== null}>
+            Start practice (E)
+          </button>{' '}
+          <button type="button" onClick={onStartRanked}>
+            Play ranked (R)
+          </button>{' '}
+          <button type="button" onClick={onStats}>
+            Stats (S)
+          </button>
+        </div>
       </form>
-
-      <hr />
-      <p>
-        <button type="button" onClick={onStartRanked}>
-          Play ranked
-        </button>{' '}
-        <span className="muted">Default settings, {RANKED_DURATION} seconds. Scores are saved.</span>
-      </p>
-      <p>
-        <button type="button" className="link" onClick={onStats}>
-          Stats
-        </button>
-      </p>
     </div>
   );
 }

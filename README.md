@@ -9,11 +9,11 @@ An arithmetic speed drill that runs entirely in your browser. You get a stream o
 ## Controls
 
 - **Type the answer.** There's no Enter: a correct answer is accepted the moment it's typed, and a wrong one just sits there until you fix it.
-- **Esc** during a round restarts immediately with the same mode and settings.
-- **Shift+Esc** during a round (or the "Settings" link under the problem) goes back to the settings screen.
-- On the results screen, **Enter** or **Esc** plays again and **Shift+Esc** goes to settings.
+- **Refresh** the page during a round to restart it with the same mode and settings. **Esc** goes back to the menu.
+- On the menu, **E** starts practice, **R** starts ranked and **S** opens stats (not while typing in a range box).
+- On the results screen, **Enter** plays again and **Esc** goes to the menu. On the stats page, **Esc** goes to the menu.
 
-A round you leave early (restart, settings, or closing/hiding the tab) records no score. Its answers still count toward your stats; a ranked round's answers count as practice.
+A round you leave early (refresh, Esc, or closing/hiding the tab) records no score. Its answers still count toward your stats; a ranked round's answers count as practice.
 
 ## Modes
 

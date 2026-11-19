@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { groupLabel } from '../core/groups';
 import type { Trend } from '../core/model';
 import { weakestGroups } from '../core/model';
@@ -31,6 +31,17 @@ export function Stats({ data, onImport, onBack }: Props) {
   const [message, setMessage] = useState<string | null>(null);
   const weakest = weakestGroups(data.model, WEAKEST_COUNT);
 
+  // Esc: back to the menu.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      onBack();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onBack]);
+
   function download() {
     const blob = new Blob([exportJson(data)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -53,7 +64,7 @@ export function Stats({ data, onImport, onBack }: Props) {
   }
 
   return (
-    <div className="page">
+    <div className="panel">
       <p>
         <button type="button" className="link" onClick={onBack}>
           ← Back

@@ -36,14 +36,40 @@ interface Round {
   settings: SettingsType;
 }
 
+// The round in progress is kept in sessionStorage so a browser refresh restarts it
+// with the same mode and settings. It's removed whenever the player leaves the round.
+const ROUND_KEY = 'detamac:round';
+
+function readSavedRound(): Omit<Round, 'id'> | null {
+  try {
+    const saved = JSON.parse(window.sessionStorage.getItem(ROUND_KEY) ?? 'null');
+    if ((saved?.mode === 'practice' || saved?.mode === 'ranked') && saved.settings) return saved;
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function writeSavedRound(round: Omit<Round, 'id'> | null) {
+  try {
+    if (round) window.sessionStorage.setItem(ROUND_KEY, JSON.stringify(round));
+    else window.sessionStorage.removeItem(ROUND_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 export function App() {
   // Save data is mutated in place (the sampler reads the live model), so it lives in a ref.
   const data = useRef<SaveData>(load(browserStorage));
   const [, setVersion] = useState(0);
   const refresh = () => setVersion((v) => v + 1);
 
-  const [screen, setScreen] = useState<Screen>('settings');
-  const [round, setRound] = useState<Round | null>(null);
+  const [round, setRound] = useState<Round | null>(() => {
+    const saved = readSavedRound();
+    return saved && { id: 0, ...saved };
+  });
+  const [screen, setScreen] = useState<Screen>(round ? 'game' : 'settings');
   const [lastScore, setLastScore] = useState(0);
   // Ranked answers wait here until the round ends.
   const rankedBuffer = useRef<AnswerRecord[]>([]);
@@ -53,18 +79,27 @@ export function App() {
     rankedBuffer.current = [];
     roundCounter.current += 1;
     setRound({ id: roundCounter.current, mode, settings });
+    writeSavedRound({ mode, settings });
     setScreen('game');
   }, []);
 
   const startRanked = () => start('ranked', { ...DEFAULT_SETTINGS, durationSeconds: RANKED_DURATION });
 
   // Closing or hiding the page mid-round abandons a ranked round: its answers are
-  // saved as practice right away and no score is recorded.
+  // saved as practice right away and no score is recorded. The saved round is only
+  // forgotten once the page is visible again, so a refresh (which also hides the page)
+  // still restarts it.
   useEffect(() => {
     if (screen !== 'game' || round?.mode !== 'ranked') return;
     const abandon = () => {
       flushRankedBuffer(browserStorage, data.current, rankedBuffer.current);
       setScreen('settings');
+      const forget = () => {
+        if (document.visibilityState !== 'visible') return;
+        writeSavedRound(null);
+        document.removeEventListener('visibilitychange', forget);
+      };
+      document.addEventListener('visibilitychange', forget);
     };
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') abandon();
@@ -88,6 +123,7 @@ export function App() {
 
   // The timer ran out: a finished ranked round is saved with its score.
   function handleEnd(score: number) {
+    writeSavedRound(null);
     if (round?.mode === 'ranked') {
       applyRankedRound(data.current.model, rankedBuffer.current, true);
       rankedBuffer.current = [];
@@ -98,12 +134,12 @@ export function App() {
     setScreen('results');
   }
 
-  // The player left mid-round (Esc / Shift+Esc / Settings link). No score is recorded;
-  // ranked answers are kept as practice. Practice answers were already saved as they came.
-  function handleInterrupt(next: 'restart' | 'settings') {
+  // The player pressed Esc mid-round. No score is recorded; ranked answers are kept
+  // as practice. Practice answers were already saved as they came.
+  function handleInterrupt() {
     if (round?.mode === 'ranked') flushRankedBuffer(browserStorage, data.current, rankedBuffer.current);
-    if (next === 'restart' && round) start(round.mode, round.settings);
-    else setScreen('settings');
+    writeSavedRound(null);
+    setScreen('settings');
   }
 
   const retry = useCallback(() => {

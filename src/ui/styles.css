@@ -1,10 +1,9 @@
-/* Plain and minimal: white page, default sans-serif, no shadows or gradients,
-   lots of whitespace, content in one centered column. */
+/* Zetamac-style: white page, Arial, light-grey panels and bands, native-looking controls. */
 :root {
-  --text: #222;
-  --muted: #777;
-  --border: #aaa;
-  --rule: #e2e2e2;
+  --text: #000;
+  --muted: #555;
+  --border: #999;
+  --panel: #ddd;
   --error: #b42318;
 }
 
@@ -18,20 +17,21 @@ body {
   margin: 0;
   background: #fff;
   color: var(--text);
-  font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   font-size: 20px;
   line-height: 1.5;
 }
 
-.page {
+.panel {
   max-width: 780px;
-  margin: 0 auto;
-  padding: 40px 24px 64px;
+  margin: 40px auto;
+  padding: 24px 32px;
+  background: var(--panel);
 }
 
 h1 {
-  font-size: 1.8em;
-  font-weight: normal;
+  font-size: 2em;
+  font-weight: bold;
   margin: 0 0 0.5em;
 }
 
@@ -41,28 +41,21 @@ h2 {
   margin: 2em 0 0.6em;
 }
 
-hr {
-  border: 0;
-  border-top: 1px solid var(--rule);
-  margin: 32px 0;
-}
-
+/* Native buttons, just scaled to the text. */
 button {
-  font: inherit;
-  padding: 6px 18px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: #f7f7f7;
-  color: inherit;
-  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85em;
 }
 
-button:disabled {
-  color: var(--muted);
-  cursor: default;
+.buttons {
+  text-align: right;
+  margin-top: 16px;
 }
 
 button.link {
+  font-size: inherit;
+  color: inherit;
+  cursor: pointer;
   background: none;
   border: 0;
   padding: 0;
@@ -111,63 +104,50 @@ input[type='checkbox'] {
 }
 
 input.range {
-  width: 4.2em;
-  padding: 4px 8px;
+  width: 3.6em;
+  font-size: 0.85em;
+  padding: 2px 4px;
   margin: 4px 0;
-  border: 1px solid var(--border);
-  border-radius: 3px;
+  text-align: right;
 }
 
 /* Game */
 .banner {
   display: flex;
   justify-content: space-between;
-  padding: 14px 24px;
-  border-bottom: 1px solid var(--rule);
-  font-size: 20px;
+  padding: 12px 16px;
 }
 
 .problem {
-  margin-top: 22vh;
-  padding: 0 16px;
+  margin-top: 25vh;
+  padding: 0.5em 16px;
+  background: var(--panel);
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   gap: 12px;
-  font-size: 40px;
+  font-size: 2.5em;
   white-space: nowrap;
 }
 
 input.answer {
   width: 4.4em; /* room for 6 digits */
   font-size: 1em;
-  padding: 4px 10px;
+  padding: 2px 6px;
   border: 1px solid var(--border);
-  border-radius: 4px;
-}
-
-.game-links {
-  text-align: center;
-  margin-top: 56px;
-  font-size: 18px;
-}
-
-.hint {
-  color: var(--muted);
-  font-size: 16px;
-  margin-top: 8px;
 }
 
 /* End screen */
 .end {
-  text-align: center;
+  max-width: 480px;
   margin-top: 18vh;
 }
 
 .final-score {
-  font-size: 40px;
-  margin: 0 0 32px;
+  font-size: 2em;
+  font-weight: bold;
+  margin: 0;
 }
 
 /* Stats */
@@ -196,25 +176,16 @@ input.answer {
     font-size: 18px;
   }
 
-  .page {
-    padding: 24px 16px 48px;
-  }
-
-  .banner {
-    padding: 12px 16px;
-    font-size: 18px;
+  .panel {
+    margin: 16px;
+    padding: 16px;
   }
 
   .problem {
-    font-size: 32px;
-  }
-
-  .final-score {
-    font-size: 32px;
+    font-size: 2em;
   }
 
   input.range {
-    width: 3.8em;
-    padding: 4px 6px;
+    width: 3.4em;
   }
 }
